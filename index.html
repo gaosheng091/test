@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Type16 人格测试</title>
+<style>
+  :root{ --bg:#f6f7fb; --card:#fff; --ink:#22252b; --sub:#8a90a0; --line:#eceef3; --accent:#5b6cf0; }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+       background:var(--bg);color:var(--ink);line-height:1.6;}
+  .wrap{max-width:560px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
+  .pad{padding:20px;}
+  h1{font-size:24px;margin:6px 0 2px;}
+  .muted{color:var(--sub);font-size:13px;}
+
+  /* 首页卡片 */
+  .hero{padding:34px 20px 14px;}
+  .cards{display:flex;flex-direction:column;gap:12px;padding:8px 20px 28px;}
+  .vcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px;
+         cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:space-between;}
+  .vcard:active{transform:scale(.985);}
+  .vcard .t{font-size:17px;font-weight:600;}
+  .vcard .s{font-size:12.5px;color:var(--sub);margin-top:3px;}
+  .badge{font-size:13px;font-weight:700;color:#fff;background:var(--accent);border-radius:20px;padding:6px 12px;white-space:nowrap;}
+  .tip{font-size:12px;color:var(--sub);padding:0 22px 26px;}
+
+  /* 答题 */
+  .topbar{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:5;}
+  .back{font-size:14px;color:var(--sub);background:none;border:none;cursor:pointer;}
+  .pbar{flex:1;height:6px;background:var(--line);border-radius:6px;overflow:hidden;}
+  .pfill{height:100%;background:var(--accent);width:0;transition:.25s;}
+  .pnum{font-size:12.5px;color:var(--sub);min-width:54px;text-align:right;}
+
+  .qbox{flex:1;display:flex;flex-direction:column;justify-content:center;padding:18px 20px 8px;}
+  .qhint{text-align:center;color:var(--sub);font-size:13px;margin-bottom:18px;}
+  .traits{display:flex;justify-content:space-between;gap:14px;margin-bottom:10px;}
+  .traits .lab{flex:1;font-size:16px;font-weight:600;}
+  .traits .lab.r{text-align:right;}
+  .scale{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 4px 4px;}
+  .dot{border-radius:50%;border:2px solid #cfd4e6;background:#fff;cursor:pointer;transition:.12s;flex:none;}
+  .dot:active{transform:scale(.9);}
+  .d1{width:46px;height:46px;border-color:#7d8af2;}
+  .d2{width:38px;height:38px;border-color:#a6aef6;}
+  .d3{width:30px;height:30px;}
+  .d4{width:38px;height:38px;border-color:#f0a6c8;}
+  .d5{width:46px;height:46px;border-color:#ef7db0;}
+  .dot.sel{background:var(--accent);border-color:var(--accent);box-shadow:0 4px 14px rgba(91,108,240,.4);}
+  .dot.sel.right{background:#ef5fa0;border-color:#ef5fa0;box-shadow:0 4px 14px rgba(239,95,160,.4);}
+  .sidehint{display:flex;justify-content:space-between;color:var(--sub);font-size:11px;padding:2px 2px 0;}
+  .nav{display:flex;gap:12px;padding:18px 20px 26px;}
+  .btn{flex:1;border:none;border-radius:12px;padding:13px;font-size:15px;cursor:pointer;}
+  .btn.ghost{background:#eef0f7;color:#5a6172;}
+  .btn.prim{background:var(--accent);color:#fff;}
+  .btn:disabled{opacity:.4;cursor:default;}
+
+  /* 结果 */
+  .result{padding:30px 22px 40px;text-align:center;}
+  .rtype{font-size:54px;font-weight:800;letter-spacing:2px;}
+  .rname{font-size:22px;font-weight:700;margin-top:2px;}
+  .rgroup{display:inline-block;color:#fff;border-radius:20px;padding:3px 14px;font-size:13px;margin-top:10px;}
+  .rslogan{font-size:15px;color:#5a6172;margin:16px 6px;font-style:italic;}
+  .rdesc{font-size:14.5px;color:#42474f;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:8px 0 18px;}
+  .bars{text-align:left;margin:10px 0 8px;}
+  .bar{margin:14px 0;}
+  .bar .bt{display:flex;justify-content:space-between;font-size:13px;color:#5a6172;margin-bottom:5px;}
+  .bar .track{height:10px;background:#edeff5;border-radius:8px;position:relative;overflow:hidden;}
+  .bar .fill{position:absolute;top:0;bottom:0;background:var(--accent);border-radius:8px;}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:6px 0 4px;}
+  .tag{font-size:12.5px;background:#eef0f7;color:#4a5160;border-radius:16px;padding:5px 12px;}
+  .tag.g{background:#fef0e6;color:#c47a2c;}
+  .sec-t{font-size:13px;color:var(--sub);margin:18px 0 8px;}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+const BANK={"meta": {"name": "Type16 主题库", "format": "likert5", "scale_labels": ["完全偏左", "偏左", "中立", "偏右", "完全偏右"], "dimensions": ["EI", "SN", "TF", "JP"], "perDimensionTotal": 36, "total": 144, "scoring": {"rule": "每题答 v∈[1,5]: leftPole += (5-v); rightPole += (v-1)。每维度比较两字母累计分取高者;平局用 tieBreak。strength% = winner/(winner+loser)*100。", "tieBreak": {"EI": "I", "SN": "S", "TF": "F", "JP": "J"}}, "note": "主库共144题,每维度36。各版本从此库按维度取前 N 题(见 versions.json)。"}, "questions": [{"id": 1, "dim": "EI", "order": 1, "leftPole": "E", "left": "聚会让我充满活力", "rightPole": "I", "right": "聚会让我精疲力尽"}, {"id": 2, "dim": "EI", "order": 2, "leftPole": "I", "left": "需要独处来恢复精力", "rightPole": "E", "right": "独处太久会觉得无聊"}, {"id": 3, "dim": "EI", "order": 3, "leftPole": "E", "left": "想到什么就说出来,边说边想", "rightPole": "I", "right": "习惯想清楚了再开口"}, {"id": 4, "dim": "EI", "order": 4, "leftPole": "I", "left": "倾向等别人先来搭话", "rightPole": "E", "right": "会主动和陌生人攀谈"}, {"id": 5, "dim": "EI", "order": 5, "leftPole": "E", "left": "周末更想出门凑热闹", "rightPole": "I", "right": "周末更想宅在家里"}, {"id": 6, "dim": "EI", "order": 6, "leftPole": "I", "left": "尽量避免公开发言", "rightPole": "E", "right": "乐于在众人面前表现"}, {"id": 7, "dim": "EI", "order": 7, "leftPole": "E", "left": "一群人一起做事更带劲", "rightPole": "I", "right": "一个人安静做事效率最高"}, {"id": 8, "dim": "EI", "order": 8, "leftPole": "I", "left": "话比较少,喜欢听", "rightPole": "E", "right": "话比较多,喜欢说"}, {"id": 9, "dim": "EI", "order": 9, "leftPole": "E", "left": "很容易交到新朋友", "rightPole": "I", "right": "交新朋友需要时间预热"}, {"id": 10, "dim": "EI", "order": 10, "leftPole": "I", "left": "更愿意待在角落安静观察", "rightPole": "E", "right": "喜欢成为场子的中心"}, {"id": 11, "dim": "EI", "order": 11, "leftPole": "E", "left": "热闹的环境让我兴奋", "rightPole": "I", "right": "安静的环境让我舒服"}, {"id": 12, "dim": "EI", "order": 12, "leftPole": "I", "left": "遇到事先自己消化", "rightPole": "E", "right": "遇到事第一反应是找人聊"}, {"id": 13, "dim": "EI", "order": 13, "leftPole": "E", "left": "乐意主动分享自己的近况", "rightPole": "I", "right": "不太会主动透露自己的事"}, {"id": 14, "dim": "EI", "order": 14, "leftPole": "I", "left": "更喜欢一对一深聊", "rightPole": "E", "right": "同时和很多人来往很自在"}, {"id": 15, "dim": "EI", "order": 15, "leftPole": "E", "left": "陌生场合也能很快放开", "rightPole": "I", "right": "陌生场合需要慢慢适应"}, {"id": 16, "dim": "EI", "order": 16, "leftPole": "I", "left": "情绪和想法比较内敛", "rightPole": "E", "right": "情绪和想法容易写在脸上"}, {"id": 17, "dim": "EI", "order": 17, "leftPole": "E", "left": "一天没和人说话会难受", "rightPole": "I", "right": "一整天独处也很享受"}, {"id": 18, "dim": "EI", "order": 18, "leftPole": "I", "left": "群聊里常潜水", "rightPole": "E", "right": "喜欢在群聊里冒泡"}, {"id": 19, "dim": "EI", "order": 19, "leftPole": "E", "left": "精力来自和人互动", "rightPole": "I", "right": "精力来自独处与安静"}, {"id": 20, "dim": "EI", "order": 20, "leftPole": "I", "left": "倾向先想透再行动", "rightPole": "E", "right": "倾向先行动、在做中思考"}, {"id": 21, "dim": "EI", "order": 21, "leftPole": "E", "left": "朋友圈很广,认识很多人", "rightPole": "I", "right": "朋友不多,但大多交心"}, {"id": 22, "dim": "EI", "order": 22, "leftPole": "I", "left": "沉默不会让我不自在", "rightPole": "E", "right": "会主动打破冷场"}, {"id": 23, "dim": "EI", "order": 23, "leftPole": "E", "left": "在人群里越待越精神", "rightPole": "I", "right": "在人群里待久了想抽身"}, {"id": 24, "dim": "EI", "order": 24, "leftPole": "I", "left": "注意力常朝向自己的内心", "rightPole": "E", "right": "注意力常朝向外部世界和他人"}, {"id": 25, "dim": "EI", "order": 25, "leftPole": "E", "left": "喜欢被人关注", "rightPole": "I", "right": "不太喜欢成为焦点"}, {"id": 26, "dim": "EI", "order": 26, "leftPole": "I", "left": "更常被动参加活动", "rightPole": "E", "right": "常主动发起聚会"}, {"id": 27, "dim": "EI", "order": 27, "leftPole": "E", "left": "想法喜欢说出来一起讨论", "rightPole": "I", "right": "想法喜欢自己写下来梳理"}, {"id": 28, "dim": "EI", "order": 28, "leftPole": "I", "left": "长假更想安静独处", "rightPole": "E", "right": "长假更想约人见面"}, {"id": 29, "dim": "EI", "order": 29, "leftPole": "E", "left": "喜欢开放热闹的工位", "rightPole": "I", "right": "喜欢安静独立的空间"}, {"id": 30, "dim": "EI", "order": 30, "leftPole": "I", "left": "表达欲比较弱", "rightPole": "E", "right": "表达欲比较强"}, {"id": 31, "dim": "EI", "order": 31, "leftPole": "E", "left": "和人很快就能熟络", "rightPole": "I", "right": "和人熟起来比较慢"}, {"id": 32, "dim": "EI", "order": 32, "leftPole": "I", "left": "业余爱好多是独自进行", "rightPole": "E", "right": "业余爱好多与人一起"}, {"id": 33, "dim": "EI", "order": 33, "leftPole": "E", "left": "爱发动态分享生活", "rightPole": "I", "right": "很少发动态"}, {"id": 34, "dim": "EI", "order": 34, "leftPole": "I", "left": "在新环境先观望", "rightPole": "E", "right": "在新环境主动融入"}, {"id": 35, "dim": "EI", "order": 35, "leftPole": "E", "left": "在人群中精神高涨", "rightPole": "I", "right": "在独处中内心平静"}, {"id": 36, "dim": "EI", "order": 36, "leftPole": "I", "left": "社交后需要时间恢复", "rightPole": "E", "right": "社交后反而更兴奋"}, {"id": 37, "dim": "SN", "order": 1, "leftPole": "S", "left": "更关注眼前的当下", "rightPole": "N", "right": "更关注未来的可能"}, {"id": 38, "dim": "SN", "order": 2, "leftPole": "N", "left": "先看整体和大局", "rightPole": "S", "right": "先看具体的细节"}, {"id": 39, "dim": "SN", "order": 3, "leftPole": "S", "left": "更信任亲眼所见的事实", "rightPole": "N", "right": "更信任灵感和直觉"}, {"id": 40, "dim": "SN", "order": 4, "leftPole": "N", "left": "喜欢琢磨抽象的概念和理论", "rightPole": "S", "right": "喜欢动手的实际经验"}, {"id": 41, "dim": "SN", "order": 5, "leftPole": "S", "left": "讲一件事,会说发生了什么", "rightPole": "N", "right": "讲一件事,会说它意味着什么"}, {"id": 42, "dim": "SN", "order": 6, "leftPole": "N", "left": "被新颖的创意吸引", "rightPole": "S", "right": "被现实可行的方案吸引"}, {"id": 43, "dim": "SN", "order": 7, "leftPole": "S", "left": "靠具体例子去理解世界", "rightPole": "N", "right": "靠抽象概念去理解世界"}, {"id": 44, "dim": "SN", "order": 8, "leftPole": "N", "left": "常常想到言外之意", "rightPole": "S", "right": "习惯按字面去理解"}, {"id": 45, "dim": "SN", "order": 9, "leftPole": "S", "left": "做事喜欢一步一步来", "rightPole": "N", "right": "思路常常跳跃联想"}, {"id": 46, "dim": "SN", "order": 10, "leftPole": "N", "left": "享受脑内天马行空的畅想", "rightPole": "S", "right": "享受真实的五感体验"}, {"id": 47, "dim": "SN", "order": 11, "leftPole": "S", "left": "记得住具体的细节", "rightPole": "N", "right": "记得住大致的印象和感觉"}, {"id": 48, "dim": "SN", "order": 12, "leftPole": "N", "left": "倾向尝试改变的可能", "rightPole": "S", "right": "倾向维持行之有效的现状"}, {"id": 49, "dim": "SN", "order": 13, "leftPole": "S", "left": "更擅长落地执行", "rightPole": "N", "right": "更擅长构思蓝图"}, {"id": 50, "dim": "SN", "order": 14, "leftPole": "N", "left": "喜欢开放、可发挥的题目", "rightPole": "S", "right": "喜欢有标准答案的题目"}, {"id": 51, "dim": "SN", "order": 15, "leftPole": "S", "left": "看重脚踏实地", "rightPole": "N", "right": "看重想象力"}, {"id": 52, "dim": "SN", "order": 16, "leftPole": "N", "left": "容易注意到模式和趋势", "rightPole": "S", "right": "容易注意到具体事实"}, {"id": 53, "dim": "SN", "order": 17, "leftPole": "S", "left": "相信经验积累", "rightPole": "N", "right": "相信灵光一现"}, {"id": 54, "dim": "SN", "order": 18, "leftPole": "N", "left": "想问题常常问'为什么'", "rightPole": "S", "right": "想问题常常问'是什么、怎么做'"}, {"id": 55, "dim": "SN", "order": 19, "leftPole": "S", "left": "偏好成熟可靠的老方法", "rightPole": "N", "right": "偏好新奇未试过的方法"}, {"id": 56, "dim": "SN", "order": 20, "leftPole": "N", "left": "喜欢把事情往大处想", "rightPole": "S", "right": "喜欢把事情往细处做"}, {"id": 57, "dim": "SN", "order": 21, "leftPole": "S", "left": "更在意当下的踏实享受", "rightPole": "N", "right": "更在意长远的可能性"}, {"id": 58, "dim": "SN", "order": 22, "leftPole": "N", "left": "点子和想法层出不穷", "rightPole": "S", "right": "更看重把一件事做扎实"}, {"id": 59, "dim": "SN", "order": 23, "leftPole": "S", "left": "务实、注重实用", "rightPole": "N", "right": "理想、注重意义"}, {"id": 60, "dim": "SN", "order": 24, "leftPole": "N", "left": "喜欢隐喻和象征", "rightPole": "S", "right": "喜欢具体和写实"}, {"id": 61, "dim": "SN", "order": 25, "leftPole": "S", "left": "关注'是什么'", "rightPole": "N", "right": "关注'可能会怎样'"}, {"id": 62, "dim": "SN", "order": 26, "leftPole": "N", "left": "重视整体的概念", "rightPole": "S", "right": "重视实操的步骤"}, {"id": 63, "dim": "SN", "order": 27, "leftPole": "S", "left": "喜欢确定的事实", "rightPole": "N", "right": "喜欢开放的想象"}, {"id": 64, "dim": "SN", "order": 28, "leftPole": "N", "left": "描述偏比喻发散", "rightPole": "S", "right": "描述偏精确具体"}, {"id": 65, "dim": "SN", "order": 29, "leftPole": "S", "left": "学东西喜欢先动手", "rightPole": "N", "right": "学东西喜欢先弄懂原理"}, {"id": 66, "dim": "SN", "order": 30, "leftPole": "N", "left": "喜欢探索新的可能", "rightPole": "S", "right": "喜欢重复可靠的流程"}, {"id": 67, "dim": "SN", "order": 31, "leftPole": "S", "left": "活在现实感里", "rightPole": "N", "right": "活在未来的画面里"}, {"id": 68, "dim": "SN", "order": 32, "leftPole": "N", "left": "先注意整体氛围", "rightPole": "S", "right": "先注意环境细节"}, {"id": 69, "dim": "SN", "order": 33, "leftPole": "S", "left": "信任已验证过的", "rightPole": "N", "right": "信任尚未实现的潜力"}, {"id": 70, "dim": "SN", "order": 34, "leftPole": "N", "left": "喜欢思考宏大的问题", "rightPole": "S", "right": "喜欢解决具体的问题"}, {"id": 71, "dim": "SN", "order": 35, "leftPole": "S", "left": "做事偏好按图索骥", "rightPole": "N", "right": "做事偏好灵感驱动"}, {"id": 72, "dim": "SN", "order": 36, "leftPole": "N", "left": "凭感觉摸索", "rightPole": "S", "right": "照着说明书来"}, {"id": 73, "dim": "TF", "order": 1, "leftPole": "T", "left": "做决定主要靠逻辑分析", "rightPole": "F", "right": "做决定主要靠感受和价值观"}, {"id": 74, "dim": "TF", "order": 2, "leftPole": "F", "left": "更看重和谐与体谅", "rightPole": "T", "right": "更看重真相与公正"}, {"id": 75, "dim": "TF", "order": 3, "leftPole": "T", "left": "习惯先客观分析", "rightPole": "F", "right": "习惯先共情对方"}, {"id": 76, "dim": "TF", "order": 4, "leftPole": "F", "left": "倾向包容和相信他人", "rightPole": "T", "right": "倾向质疑和批判审视"}, {"id": 77, "dim": "TF", "order": 5, "leftPole": "T", "left": "被批评时就事论事", "rightPole": "F", "right": "被批评时容易受伤"}, {"id": 78, "dim": "TF", "order": 6, "leftPole": "F", "left": "更想擅长把人安顿好", "rightPole": "T", "right": "更想擅长把事情修好"}, {"id": 79, "dim": "TF", "order": 7, "leftPole": "T", "left": "宁可诚实直接", "rightPole": "F", "right": "宁可委婉照顾感受"}, {"id": 80, "dim": "TF", "order": 8, "leftPole": "F", "left": "更希望被人喜爱", "rightPole": "T", "right": "更希望被人尊重"}, {"id": 81, "dim": "TF", "order": 9, "leftPole": "T", "left": "评价一件事看它对不对", "rightPole": "F", "right": "评价一件事看它对人的影响"}, {"id": 82, "dim": "TF", "order": 10, "leftPole": "F", "left": "判断会考虑具体人情", "rightPole": "T", "right": "判断坚持一致的规则"}, {"id": 83, "dim": "TF", "order": 11, "leftPole": "T", "left": "争论时更在意谁有道理", "rightPole": "F", "right": "争论时更在意别伤了关系"}, {"id": 84, "dim": "TF", "order": 12, "leftPole": "F", "left": "容易感性投入", "rightPole": "T", "right": "习惯冷静抽离"}, {"id": 85, "dim": "TF", "order": 13, "leftPole": "T", "left": "别人倾诉时先给解决方案", "rightPole": "F", "right": "别人倾诉时先给情感支持"}, {"id": 86, "dim": "TF", "order": 14, "leftPole": "F", "left": "倾向因人而异地变通", "rightPole": "T", "right": "倾向一视同仁讲原则"}, {"id": 87, "dim": "TF", "order": 15, "leftPole": "T", "left": "做事任务导向", "rightPole": "F", "right": "做事关系导向"}, {"id": 88, "dim": "TF", "order": 16, "leftPole": "F", "left": "看重团队的氛围", "rightPole": "T", "right": "看重逻辑能自洽"}, {"id": 89, "dim": "TF", "order": 17, "leftPole": "T", "left": "评判他人靠客观标准", "rightPole": "F", "right": "评判他人靠设身处地"}, {"id": 90, "dim": "TF", "order": 18, "leftPole": "F", "left": "容易被故事和情感打动", "rightPole": "T", "right": "更容易被数据和事实说服"}, {"id": 91, "dim": "TF", "order": 19, "leftPole": "T", "left": "别人觉得我冷静客观", "rightPole": "F", "right": "别人觉得我温暖体贴"}, {"id": 92, "dim": "TF", "order": 20, "leftPole": "F", "left": "道德判断偏向慈悲为怀", "rightPole": "T", "right": "道德判断偏向公平正义"}, {"id": 93, "dim": "TF", "order": 21, "leftPole": "T", "left": "能不带感情地分析问题", "rightPole": "F", "right": "很难把情感完全抽离"}, {"id": 94, "dim": "TF", "order": 22, "leftPole": "F", "left": "很重视情绪的价值", "rightPole": "T", "right": "不太习惯谈论情绪"}, {"id": 95, "dim": "TF", "order": 23, "leftPole": "T", "left": "关键时刻听从头脑", "rightPole": "F", "right": "关键时刻听从内心"}, {"id": 96, "dim": "TF", "order": 24, "leftPole": "F", "left": "决策先问'我感觉如何'", "rightPole": "T", "right": "决策先列利弊清单"}, {"id": 97, "dim": "TF", "order": 25, "leftPole": "T", "left": "给反馈比较直白", "rightPole": "F", "right": "给反馈比较委婉"}, {"id": 98, "dim": "TF", "order": 26, "leftPole": "F", "left": "更看重对人的影响", "rightPole": "T", "right": "更看重结果的对错"}, {"id": 99, "dim": "TF", "order": 27, "leftPole": "T", "left": "对人对事用同一把尺", "rightPole": "F", "right": "看具体关系灵活对待"}, {"id": 100, "dim": "TF", "order": 28, "leftPole": "F", "left": "容易站在人那一边", "rightPole": "T", "right": "容易保持中立"}, {"id": 101, "dim": "TF", "order": 29, "leftPole": "T", "left": "喜欢辩出个对错", "rightPole": "F", "right": "喜欢维护和气"}, {"id": 102, "dim": "TF", "order": 30, "leftPole": "F", "left": "用心多于用脑", "rightPole": "T", "right": "用脑多于用心"}, {"id": 103, "dim": "TF", "order": 31, "leftPole": "T", "left": "评估更看效率", "rightPole": "F", "right": "评估更看人情"}, {"id": 104, "dim": "TF", "order": 32, "leftPole": "F", "left": "批评时难免带情绪", "rightPole": "T", "right": "批评时对事不对人"}, {"id": 105, "dim": "TF", "order": 33, "leftPole": "T", "left": "重视原则的一致", "rightPole": "F", "right": "重视个案的体谅"}, {"id": 106, "dim": "TF", "order": 34, "leftPole": "F", "left": "偏向合作和睦", "rightPole": "T", "right": "偏向竞争比拼"}, {"id": 107, "dim": "TF", "order": 35, "leftPole": "T", "left": "处理冲突讲逻辑", "rightPole": "F", "right": "处理冲突讲情面"}, {"id": 108, "dim": "TF", "order": 36, "leftPole": "F", "left": "感同身受的温度", "rightPole": "T", "right": "旁观者清的理性"}, {"id": 109, "dim": "JP", "order": 1, "leftPole": "J", "left": "凡事喜欢提前计划", "rightPole": "P", "right": "凡事喜欢随性而为"}, {"id": 110, "dim": "JP", "order": 2, "leftPole": "P", "left": "习惯拖到最后才做", "rightPole": "J", "right": "习惯尽早把事做完"}, {"id": 111, "dim": "JP", "order": 3, "leftPole": "J", "left": "东西摆放整洁有序", "rightPole": "P", "right": "东西常常随手乱放"}, {"id": 112, "dim": "JP", "order": 4, "leftPole": "P", "left": "靠记忆,很少列清单", "rightPole": "J", "right": "爱列清单和待办"}, {"id": 113, "dim": "JP", "order": 5, "leftPole": "J", "left": "喜欢早早把决定敲定", "rightPole": "P", "right": "喜欢把选择一直开着"}, {"id": 114, "dim": "JP", "order": 6, "leftPole": "P", "left": "时间安排灵活弹性", "rightPole": "J", "right": "看重守时和期限"}, {"id": 115, "dim": "JP", "order": 7, "leftPole": "J", "left": "喜欢把事情有始有终地完成", "rightPole": "P", "right": "享受开放、进行中的状态"}, {"id": 116, "dim": "JP", "order": 8, "leftPole": "P", "left": "喜欢即兴发挥", "rightPole": "J", "right": "喜欢按部就班"}, {"id": 117, "dim": "JP", "order": 9, "leftPole": "J", "left": "做事偏好规则和流程", "rightPole": "P", "right": "做事偏好见机行事"}, {"id": 118, "dim": "JP", "order": 10, "leftPole": "P", "left": "行程喜欢随心安排", "rightPole": "J", "right": "行程喜欢排得明确"}, {"id": 119, "dim": "JP", "order": 11, "leftPole": "J", "left": "习惯早做准备", "rightPole": "P", "right": "习惯临场应变"}, {"id": 120, "dim": "JP", "order": 12, "leftPole": "P", "left": "喜欢惊喜和变化", "rightPole": "J", "right": "喜欢确定和可预期"}, {"id": 121, "dim": "JP", "order": 13, "leftPole": "J", "left": "一次只做一件、做完再说", "rightPole": "P", "right": "几件事并行、随时切换"}, {"id": 122, "dim": "JP", "order": 14, "leftPole": "P", "left": "花钱和时间随遇而安", "rightPole": "J", "right": "对预算和规划比较严格"}, {"id": 123, "dim": "JP", "order": 15, "leftPole": "J", "left": "愿意尽早做出承诺", "rightPole": "P", "right": "愿意给自己留余地"}, {"id": 124, "dim": "JP", "order": 16, "leftPole": "P", "left": "玩乐常常优先", "rightPole": "J", "right": "工作总是先于玩乐"}, {"id": 125, "dim": "JP", "order": 17, "leftPole": "J", "left": "事情没收尾会不安", "rightPole": "P", "right": "边走边看也很自在"}, {"id": 126, "dim": "JP", "order": 18, "leftPole": "P", "left": "做事更看重过程体验", "rightPole": "J", "right": "做事更看重达成目标"}, {"id": 127, "dim": "JP", "order": 19, "leftPole": "J", "left": "喜欢清晰的结构", "rightPole": "P", "right": "喜欢自由的空间"}, {"id": 128, "dim": "JP", "order": 20, "leftPole": "P", "left": "决定常常迟迟不定", "rightPole": "J", "right": "决定往往果断又快"}, {"id": 129, "dim": "JP", "order": 21, "leftPole": "J", "left": "倾向遵守既定计划", "rightPole": "P", "right": "倾向临时改变主意"}, {"id": 130, "dim": "JP", "order": 22, "leftPole": "P", "left": "旅行喜欢说走就走", "rightPole": "J", "right": "旅行喜欢做好攻略"}, {"id": 131, "dim": "JP", "order": 23, "leftPole": "J", "left": "桌面/房间总收拾整齐", "rightPole": "P", "right": "桌面/房间乱点也无所谓"}, {"id": 132, "dim": "JP", "order": 24, "leftPole": "P", "left": "不爱被清单束缚", "rightPole": "J", "right": "喜欢清单上逐项打钩"}, {"id": 133, "dim": "JP", "order": 25, "leftPole": "J", "left": "出发前先定好计划", "rightPole": "P", "right": "边走边定也无妨"}, {"id": 134, "dim": "JP", "order": 26, "leftPole": "P", "left": "deadline 临近才动手", "rightPole": "J", "right": "deadline 早早就完成"}, {"id": 135, "dim": "JP", "order": 27, "leftPole": "J", "left": "生活作息比较规律", "rightPole": "P", "right": "生活作息比较随兴"}, {"id": 136, "dim": "JP", "order": 28, "leftPole": "P", "left": "偏好开放灵活的安排", "rightPole": "J", "right": "偏好确定明确的安排"}, {"id": 137, "dim": "JP", "order": 29, "leftPole": "J", "left": "计划被打乱会不舒服", "rightPole": "P", "right": "计划有变也不太介意"}, {"id": 138, "dim": "JP", "order": 30, "leftPole": "P", "left": "决定常常再三权衡", "rightPole": "J", "right": "决定一旦定下不轻易改"}, {"id": 139, "dim": "JP", "order": 31, "leftPole": "J", "left": "喜欢把任务一一关闭", "rightPole": "P", "right": "能容忍任务一直挂着"}, {"id": 140, "dim": "JP", "order": 32, "leftPole": "P", "left": "倾向顺其自然", "rightPole": "J", "right": "倾向掌控局面"}, {"id": 141, "dim": "JP", "order": 33, "leftPole": "J", "left": "做事有固定节奏", "rightPole": "P", "right": "做事看当天心情"}, {"id": 142, "dim": "JP", "order": 34, "leftPole": "P", "left": "购物出行常临时起意", "rightPole": "J", "right": "购物出行会提前规划"}, {"id": 143, "dim": "JP", "order": 35, "leftPole": "J", "left": "喜欢规则明确", "rightPole": "P", "right": "喜欢灵活机动"}, {"id": 144, "dim": "JP", "order": 36, "leftPole": "P", "left": "东西大致找得到就行", "rightPole": "J", "right": "东西分类收纳清楚"}]};
+const VERSIONS={"order": ["lite32", "neris60", "standard93", "authority144"], "versions": {"lite32": {"label": "16人格精简测试", "subtitle": "32题 · 快速了解", "perDim": {"EI": 8, "SN": 8, "TF": 8, "JP": 8}, "total": 32}, "neris60": {"label": "NERIS 测试", "subtitle": "60题 · 主流热门", "perDim": {"EI": 15, "SN": 15, "TF": 15, "JP": 15}, "total": 60}, "standard93": {"label": "MBTI 16人格标准测试", "subtitle": "93题 · 对标 MBTI Form M", "perDim": {"EI": 24, "SN": 23, "TF": 23, "JP": 23}, "total": 93}, "authority144": {"label": "MBTI 16人格权威测试", "subtitle": "144题 · 最完整精细", "perDim": {"EI": 36, "SN": 36, "TF": 36, "JP": 36}, "total": 144}}};
+const TYPES={"groups": {"NT": {"name": "分析家", "color": "#8E7CC3"}, "NF": {"name": "外交家", "color": "#5BAE8E"}, "SJ": {"name": "守护者", "color": "#4A90D9"}, "SP": {"name": "探险家", "color": "#E0A33E"}}, "types": {"INTJ": {"name": "建筑师", "group": "NT", "slogan": "凡事皆有谋划,蓝图早已在胸。", "desc": "独立、笃定的战略家,擅长把复杂目标拆解成可执行的长期计划,凭逻辑而非情绪推进。", "strengths": ["远见", "独立", "果断"], "growth": ["体察他人感受", "容忍不完美"]}, "INTP": {"name": "逻辑学家", "group": "NT", "slogan": "对一切刨根问底的思想者。", "desc": "好奇而理性,享受拆解概念、寻找事物背后的原理,常常沉浸在自己的想法世界里。", "strengths": ["分析力", "客观", "创造性思维"], "growth": ["落地执行", "情感表达"]}, "ENTJ": {"name": "指挥官", "group": "NT", "slogan": "天生的领导者,目标即号令。", "desc": "高效、果断,擅长统筹资源、带领团队冲向目标,推崇能力与效率。", "strengths": ["领导力", "决断", "战略"], "growth": ["耐心倾听", "柔化锋芒"]}, "ENTP": {"name": "辩论家", "group": "NT", "slogan": "没有什么是不能被重新想象的。", "desc": "机敏、善辩,热爱新点子和思想交锋,擅长从多个角度挑战现状。", "strengths": ["机变", "口才", "创新"], "growth": ["收尾落实", "照顾感受"]}, "INFJ": {"name": "提倡者", "group": "NF", "slogan": "安静而坚定的理想主义者。", "desc": "富有洞察与同理心,关心人的内在与意义,愿意为信念默默付出。", "strengths": ["洞察", "共情", "信念"], "growth": ["接受现实", "照顾自己"]}, "INFP": {"name": "调停者", "group": "NF", "slogan": "心怀诗意,忠于内在价值。", "desc": "温柔、真诚的理想主义者,看重内心的价值观,渴望让世界更美好。", "strengths": ["共情", "想象力", "真诚"], "growth": ["执行力", "面对冲突"]}, "ENFJ": {"name": "主人公", "group": "NF", "slogan": "鼓舞他人,是我天生的使命。", "desc": "热情而有感染力,擅长理解和激励他人,乐于带领大家共同成长。", "strengths": ["感染力", "利他", "组织"], "growth": ["设立边界", "顾及自己"]}, "ENFP": {"name": "竞选者", "group": "NF", "slogan": "热情似火,可能性无穷。", "desc": "充满热情与好奇,善于发现人和事的潜力,把生活过得有声有色。", "strengths": ["热情", "创意", "亲和"], "growth": ["专注坚持", "重视细节"]}, "ISTJ": {"name": "物流师", "group": "SJ", "slogan": "言出必行,踏实可靠。", "desc": "认真、负责的实干家,尊重规则与事实,把事情做得有条不紊。", "strengths": ["可靠", "条理", "务实"], "growth": ["灵活变通", "表达情感"]}, "ISFJ": {"name": "守卫者", "group": "SJ", "slogan": "默默守护,温柔而坚韧。", "desc": "细心、体贴,乐于照顾身边人,以踏实的行动给人安全感。", "strengths": ["体贴", "尽责", "耐心"], "growth": ["拒绝他人", "表达需求"]}, "ESTJ": {"name": "总经理", "group": "SJ", "slogan": "秩序与执行的化身。", "desc": "务实、果断的组织者,擅长制定规则、推动落地,重视责任与效率。", "strengths": ["执行", "组织", "责任"], "growth": ["倾听异见", "柔性沟通"]}, "ESFJ": {"name": "执政官", "group": "SJ", "slogan": "热心周到,把大家照顾妥帖。", "desc": "友善、尽责,关注他人需求,擅长营造和谐有序的集体氛围。", "strengths": ["热心", "协调", "尽责"], "growth": ["接受批评", "关注自我"]}, "ISTP": {"name": "鉴赏家", "group": "SP", "slogan": "动手解决问题的实干派。", "desc": "冷静、灵巧,喜欢拆解和动手,在实践中探索事物如何运作。", "strengths": ["动手能力", "冷静", "应变"], "growth": ["长期承诺", "情感表达"]}, "ISFP": {"name": "探险家", "group": "SP", "slogan": "用感官与真心体验世界。", "desc": "温和、敏感的艺术家气质,活在当下,以行动而非言语表达自我。", "strengths": ["审美", "真诚", "随和"], "growth": ["长远规划", "表达主张"]}, "ESTP": {"name": "企业家", "group": "SP", "slogan": "活在当下,敢闯敢拼。", "desc": "精力充沛、行动派,善于抓住机会、临场应变,享受刺激与挑战。", "strengths": ["果敢", "应变", "现实感"], "growth": ["三思后行", "顾及他人"]}, "ESFP": {"name": "表演者", "group": "SP", "slogan": "把每一刻都过成精彩现场。", "desc": "热情、外放,热爱生活与人群,擅长用快乐感染身边每一个人。", "strengths": ["活力", "亲和", "乐观"], "growth": ["专注长远", "处理冲突"]}}};
+
+/* ---------- 计分引擎(与 src/scoring.js 同一逻辑) ---------- */
+const AXES={EI:['E','I'],SN:['S','N'],TF:['T','F'],JP:['J','P']};
+const TIE={EI:'I',SN:'S',TF:'F',JP:'J'};
+function selectVersion(key){
+  const cfg=VERSIONS.versions[key], out=[];
+  for(const dim in cfg.perDim){
+    out.push(...BANK.questions.filter(q=>q.dim===dim).sort((a,b)=>a.order-b.order).slice(0,cfg.perDim[dim]));
+  }
+  return out;
+}
+function score(qs,ans){
+  const p={E:0,I:0,S:0,N:0,T:0,F:0,J:0,P:0};
+  for(const q of qs){const v=ans[q.id];if(v==null)continue;p[q.leftPole]+=(5-v);p[q.rightPole]+=(v-1);}
+  let type='';const dims={};
+  for(const ax in AXES){const[a,b]=AXES[ax];const pa=p[a],pb=p[b];
+    const L=pa>pb?a:pb>pa?b:TIE[ax];const tot=pa+pb,win=Math.max(pa,pb);
+    dims[ax]={a,b,pa,pb,letter:L,strength:tot?Math.round(win/tot*1000)/10:50};type+=L;}
+  return {type,dims};
+}
+
+/* ---------- 状态 + 渲染 ---------- */
+let S={view:'home',vkey:null,qs:[],idx:0,ans:{}};
+const app=document.getElementById('app');
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+function render(){
+  if(S.view==='home') return renderHome();
+  if(S.view==='test') return renderTest();
+  if(S.view==='result') return renderResult();
+}
+
+function renderHome(){
+  const cards=VERSIONS.order.map(k=>{const v=VERSIONS.versions[k];
+    return `<div class="vcard" onclick="startTest('${k}')">
+      <div><div class="t">${esc(v.label)}</div><div class="s">${esc(v.subtitle||'')}</div></div>
+      <div class="badge">${v.total}题</div></div>`;}).join('');
+  app.innerHTML=`<div class="hero"><h1>Type16 人格测试</h1>
+    <div class="muted">选择一个版本开始 · 题目越多结果越精细</div></div>
+    <div class="cards">${cards}</div>
+    <div class="tip">基于荣格人格分类的 16 型(MBTI 风格)。结果仅供自我探索参考。</div>`;
+}
+
+function startTest(key){S.view='test';S.vkey=key;S.qs=selectVersion(key);S.idx=0;S.ans={};render();}
+
+function renderTest(){
+  const q=S.qs[S.idx], total=S.qs.length, cur=S.ans[q.id]||null;
+  const prog=Math.round(S.idx/total*100);
+  const dots=[1,2,3,4,5].map(v=>
+    `<div class="dot d${v} ${cur===v?('sel'+(v>3?' right':'')):''}" onclick="answer(${v})"></div>`).join('');
+  app.innerHTML=`
+    <div class="topbar">
+      <button class="back" onclick="goHome()">‹ 退出</button>
+      <div class="pbar"><div class="pfill" style="width:${prog}%"></div></div>
+      <div class="pnum">${S.idx+1} / ${total}</div>
+    </div>
+    <div class="qbox">
+      <div class="qhint">下面两种描述,你更偏向哪一边?</div>
+      <div class="traits"><div class="lab">${esc(q.left)}</div><div class="lab r">${esc(q.right)}</div></div>
+      <div class="scale">${dots}</div>
+      <div class="sidehint"><span>非常符合左边</span><span>非常符合右边</span></div>
+    </div>
+    <div class="nav">
+      <button class="btn ghost" onclick="prev()" ${S.idx===0?'disabled':''}>上一题</button>
+      <button class="btn prim" onclick="next()" ${cur?'':'disabled'}>${S.idx===total-1?'查看结果':'下一题'}</button>
+    </div>`;
+}
+
+function answer(v){const q=S.qs[S.idx];S.ans[q.id]=v;
+  // 选完自动进入下一题(最后一题不自动跳)
+  if(S.idx<S.qs.length-1){setTimeout(()=>{S.idx++;render();},180);}else{render();}
+}
+function prev(){if(S.idx>0){S.idx--;render();}}
+function next(){const q=S.qs[S.idx];if(!S.ans[q.id])return;
+  if(S.idx<S.qs.length-1){S.idx++;render();}else{S.view='result';render();}}
+function goHome(){if(confirm('退出当前测试?进度将丢失。')){S.view='home';render();}}
+
+function renderResult(){
+  const r=score(S.qs,S.ans), t=TYPES.types[r.type], g=TYPES.groups[t.group], color=g.color;
+  const axName={EI:['外向 E','内向 I'],SN:['实感 S','直觉 N'],TF:['思考 T','情感 F'],JP:['判断 J','知觉 P']};
+  const bars=Object.keys(AXES).map(ax=>{const d=r.dims[ax];
+    const isLeft=d.letter===d.a; const pct=d.strength;
+    const lname=axName[ax][0], rname=axName[ax][1];
+    const fillStyle=isLeft?`right:50%;width:${pct/2}%;background:${color}`:`left:50%;width:${pct/2}%;background:${color}`;
+    return `<div class="bar"><div class="bt"><span style="${isLeft?'font-weight:700;color:'+color:''}">${lname}</span>
+      <span style="${!isLeft?'font-weight:700;color:'+color:''}">${rname}</span></div>
+      <div class="track"><div class="fill" style="${fillStyle}"></div></div>
+      <div class="muted" style="text-align:center;margin-top:3px;">${d.letter} · ${pct}%</div></div>`;}).join('');
+  const str=(t.strengths||[]).map(s=>`<span class="tag">${esc(s)}</span>`).join('');
+  const grow=(t.growth||[]).map(s=>`<span class="tag g">${esc(s)}</span>`).join('');
+  app.innerHTML=`<div class="result">
+    <div class="rtype" style="color:${color}">${r.type}</div>
+    <div class="rname">${esc(t.name)}</div>
+    <div class="rgroup" style="background:${color}">${esc(g.name)}型</div>
+    <div class="rslogan">“${esc(t.slogan)}”</div>
+    <div class="rdesc">${esc(t.desc)}</div>
+    <div class="bars">${bars}</div>
+    <div class="sec-t">你的优势</div><div class="tags">${str}</div>
+    <div class="sec-t">可成长之处</div><div class="tags">${grow}</div>
+    <div class="nav" style="padding:24px 0 0;">
+      <button class="btn ghost" onclick="goHome()">重新选择</button>
+      <button class="btn prim" onclick="startTest(S.vkey)">再测一次</button>
+    </div>
+    <div class="muted" style="margin-top:16px;">版本:${esc(VERSIONS.versions[S.vkey].label)} · ${S.qs.length}题</div>
+  </div>`;
+}
+
+render();
+</script>
+</body>
+</html>
