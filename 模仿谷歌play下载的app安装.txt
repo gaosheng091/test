@@ -1,0 +1,22 @@
+谷歌play下载的应用可能把一下资源存入“本地仓库” 用多语言举例
+
+ 1. 设备实际安装：splits=[base, config.arm64_v8a, config.xxhdpi, config.zh] —— 和中文手机从 Play
+  初装一模一样（只有中文）
+  2. 所有其它语言 split（base-id.apk、base-es.apk、base-en.apk... 一大堆）被推到了
+  /sdcard/Android/data/com.iquotes.app.bk/files/local_testing/ —— 这就是 FakeSplitInstallManager 的"本地仓库"，App 调
+  startInstall 时会从这里"按需安装"，带状态流转和耗时。
+
+
+安装方法
+bundletool build-apks --bundle=xxx.aab --output=xxx.apks --local-testing
+bundletool install-apks --apks=xxx.apks --device-id=R5GYB0HYGCE
+
+
+解释
+第 1 个命令 build-apks --local-testing
+它的作用是把 AAB 打包成一个带 local-testing 标记的 .apks 文件（生成到broker-localtest.apks）。这个产物生成一次就行，不用重复跑。
+
+第 2 个命令 install-apks：
+它的作用是把上面那个 .apks 装到手机——装 base+zh 到设备、把其它语言 split 推到本地仓库。
+
+卸载app重装只要调用第二个就好
